@@ -1,6 +1,7 @@
 # To use: add a .jira-url file in the base of your project
 #         You can also set JIRA_URL in your .zshrc or put .jira-url in your home directory
-#         .jira-url in the current directory takes precedence
+#         .jira-url in the current directory takes precedence. The same goes with .jira-prefix
+#         and JIRA_PREFIX.
 #
 # If you use Rapid Board, set:
 #JIRA_RAPID_BOARD="true"
@@ -15,8 +16,8 @@ open_jira_issue () {
     jira_url=$(cat .jira-url)
   elif [ -f ~/.jira-url ]; then
     jira_url=$(cat ~/.jira-url)
-  elif [[ "x$JIRA_URL" != "x" ]]; then
-    jira_url=$JIRA_URL
+  elif [[ "${JIRA_URL}" != "" ]]; then
+    jira_url=${JIRA_URL}
   else
     echo "JIRA url is not specified anywhere."
     return 1
@@ -26,6 +27,8 @@ open_jira_issue () {
     jira_prefix=$(cat .jira-prefix)
   elif [ -f ~/.jira-prefix ]; then
     jira_prefix=$(cat ~/.jira-prefix)
+  elif [[ "${JIRA_PREFIX}" != "" ]]; then
+    jira_prefix=${JIRA_PREFIX}
   else
     jira_prefix=""
   fi
@@ -54,7 +57,7 @@ open_jira_issue () {
 
 jira_name () {
   if [[ -z "$1" ]]; then
-    if [[ "x${JIRA_NAME}" != "x" ]]; then
+    if [[ "${JIRA_NAME}" != "" ]]; then
       jira_name=${JIRA_NAME}
     else
       echo "JIRA_NAME not specified"
