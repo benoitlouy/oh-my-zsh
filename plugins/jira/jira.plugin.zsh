@@ -1,4 +1,11 @@
+<<<<<<< 2cb37a948640d7aa46e19c8b491be909e2811578
 # CLI support for JIRA interaction
+=======
+# To use: add a .jira-url file in the base of your project
+#         You can also set JIRA_URL in your .zshrc or put .jira-url in your home directory
+#         .jira-url in the current directory takes precedence. The same goes with .jira-prefix
+#         and JIRA_PREFIX.
+>>>>>>> Adding ability to add JIRA_PREFIX as an env variable (e.g. in .zshrc) and minor refactor to bash curly variable braces
 #
 # Setup: 
 #   Add a .jira-url file in the base of your project
@@ -37,7 +44,7 @@ function jira() {
     jira_url=$(cat .jira-url)
   elif [[ -f ~/.jira-url ]]; then
     jira_url=$(cat ~/.jira-url)
-  elif [[ -n "${JIRA_URL}" ]]; then
+  elif [[ "${JIRA_URL}" != "" ]]; then
     jira_url=${JIRA_URL}
   else
     _jira_url_help
@@ -48,7 +55,7 @@ function jira() {
     jira_prefix=$(cat .jira-prefix)
   elif [[ -f ~/.jira-prefix ]]; then
     jira_prefix=$(cat ~/.jira-prefix)
-  elif [[ -n "${JIRA_PREFIX}" ]]; then
+  elif [[ "${JIRA_PREFIX}" != "" ]]; then
     jira_prefix=${JIRA_PREFIX}
   else
     jira_prefix=""
@@ -74,34 +81,23 @@ function jira() {
     else
       echo "Opening issue #$issue"
     fi
-
-    if [[ "$JIRA_RAPID_BOARD" == "true" ]]; then
-      open_command "${jira_url}/issues/${issue}${url_fragment}"
+   
+    if [[ "$JIRA_RAPID_BOARD" = "true" ]]; then
+      open_command  "$jira_url/issues/$jira_prefix$1$addcomment"
     else
       open_command "${jira_url}/browse/${issue}${url_fragment}"
     fi
   fi
 }
 
-function _jira_url_help() {
-  cat << EOF
-JIRA url is not specified anywhere.
-Valid options, in order of precedence:
-  .jira-url file
-  \$HOME/.jira-url file
-  JIRA_URL environment variable
-EOF
-}
-
-function _jira_query() {
-  local verb="$1"
-  local jira_name lookup preposition query
-  if [[ "${verb}" == "reported" ]]; then
-    lookup=reporter
-    preposition=by
-  elif [[ "${verb}" == "assigned" ]]; then
-    lookup=assignee
-    preposition=to
+jira_name () {
+  if [[ -z "$1" ]]; then
+    if [[ "${JIRA_NAME}" != "" ]]; then
+      jira_name=${JIRA_NAME}
+    else
+      echo "JIRA_NAME not specified"
+      return 1
+    fi
   else
     echo "not a valid lookup: $verb" >&2
     return 1
