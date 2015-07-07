@@ -9,34 +9,20 @@
 #   A .jira-url in the current directory takes precedence. 
 #   The same goes with .jira-prefix and $JIRA_PREFIX.
 #
-#   For example:
-#     cd to/my/project
-#     echo "https://name.jira.com" >> .jira-url
-#
-# Variables:
-#  $JIRA_RAPID_BOARD     - set to "true" if you use Rapid Board
-#  $JIRA_DEFAULT_ACTION  - action to do when `jira` is called witn no args
-#                          defaults to "new"
-#  $JIRA_NAME            - Your JIRA username. Used as default for assigned/reported
-#  $JIRA_PREFIX          - Prefix added to issue ID arguments
-#
-#
-# Usage: 
-#   jira            # Performs the default action
-#   jira new        # opens a new issue
-#   jira reported [username]
-#   jira assigned [username]
-#   jira dashboard
-#   jira ABC-123    # Opens an existing issue
-#   jira ABC-123 m  # Opens an existing issue for adding a comment
+# Setup: cd to/my/project
+#        echo "https://name.jira.com" >> .jira-url
+# Usage: jira           # opens a new issue
+#        jira ABC-123   # Opens an existing issue
+open_jira_issue () {
+  local open_cmd
+  if [[ "$OSTYPE" = darwin* ]]; then
+    open_cmd='open'
+  else
+    open_cmd='xdg-open'
+  fi
 
-: ${JIRA_DEFAULT_ACTION:=new}
-
-function jira() {
-  local action=${1:=$JIRA_DEFAULT_ACTION}
-
-  local jira_url jira_prefix
-  if [[ -f .jira-url ]]; then
+  local jira_url
+  if [ -f .jira-url ]; then
     jira_url=$(cat .jira-url)
   elif [[ -f ~/.jira-url ]]; then
     jira_url=$(cat ~/.jira-url)
@@ -47,7 +33,8 @@ function jira() {
     return 1
   fi
 
-  if [[ -f .jira-prefix ]]; then
+  local jira_prefix
+  if [ -f .jira-prefix ]; then
     jira_prefix=$(cat .jira-prefix)
   elif [[ -f ~/.jira-prefix ]]; then
     jira_prefix=$(cat ~/.jira-prefix)
@@ -61,27 +48,21 @@ function jira() {
   if [[ $action == "new" ]]; then
     echo "Opening new issue"
     open_command "${jira_url}/secure/CreateIssue!default.jspa"
-  elif [[ "$action" == "assigned" || "$action" == "reported" ]]; then
-    _jira_query $@
-  elif [[ "$action" == "dashboard" ]]; then
-    echo "Opening dashboard"
-    open_command "${jira_url}/secure/Dashboard.jspa"
+  elif [[ "$1" = "assigned" || "$1" = "reported" ]]; then
+    jira_query $@
   else
-    # Anything that doesn't match a special action is considered an issue name
-    local issue_arg=$action
-    local issue="${jira_prefix}${issue_arg}"
-    local url_fragment=''
+    local addcomment=''
     if [[ "$2" == "m" ]]; then
       url_fragment="#add-comment"
       echo "Add comment to issue #$issue"
     else
       echo "Opening issue #$issue"
     fi
-    
+
     if [[ "$JIRA_RAPID_BOARD" == "true" ]]; then
-      open_command  "$jira_url/issues/$jira_prefix$1$addcomment"
+      $open_cmd "$jira_url/issues/$jira_prefix$1$addcomment"
     else
-      open_command "${jira_url}/browse/${issue}${url_fragment}"
+      $open_cmd "$jira_url/browse/$jira_prefix$1$addcomment"
     fi
   fi
 }
@@ -105,7 +86,11 @@ jira_name () {
   fi
 
 jira_query () {
+  local jira_name
+  local verb
   verb="$1"
+  local lookup
+  local preposition
   if [[ "${verb}" = "reported" ]]; then
     lookup=reporter
     preposition=by
