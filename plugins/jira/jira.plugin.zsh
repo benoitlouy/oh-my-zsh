@@ -1,11 +1,7 @@
-<<<<<<< 2cb37a948640d7aa46e19c8b491be909e2811578
-# CLI support for JIRA interaction
-=======
 # To use: add a .jira-url file in the base of your project
 #         You can also set JIRA_URL in your .zshrc or put .jira-url in your home directory
 #         .jira-url in the current directory takes precedence. The same goes with .jira-prefix
 #         and JIRA_PREFIX.
->>>>>>> Adding ability to add JIRA_PREFIX as an env variable (e.g. in .zshrc) and minor refactor to bash curly variable braces
 #
 # Setup: 
 #   Add a .jira-url file in the base of your project
@@ -108,8 +104,24 @@ jira_name () {
     return 1
   fi
 
+jira_query () {
+  verb="$1"
+  if [[ "${verb}" = "reported" ]]; then
+    lookup=reporter
+    preposition=by
+  elif [[ "${verb}" = "assigned" ]]; then
+    lookup=assignee
+    preposition=to
+  else
+    echo "not a valid lookup $verb"
+    return 1
+  fi
+  shift 1
+  jira_name $@
+  if [[ $? = 1 ]]; then
+    return 1
+  fi
   echo "Browsing issues ${verb} ${preposition} ${jira_name}"
-  query="${lookup}+%3D+%22${jira_name}%22+AND+resolution+%3D+unresolved+ORDER+BY+priority+DESC%2C+created+ASC"
-  open_command "${jira_url}/secure/IssueNavigator.jspa?reset=true&jqlQuery=${query}"
+  $open_cmd "${jira_url}/secure/IssueNavigator.jspa?reset=true&jqlQuery=${lookup}+%3D+%22${jira_name}%22+AND+resolution+%3D+unresolved+ORDER+BY+priority+DESC%2C+created+ASC"
 }
 
