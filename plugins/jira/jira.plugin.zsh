@@ -12,6 +12,14 @@
 # Usage: jira           # opens a new issue
 #        jira ABC-123   # Opens an existing issue
 open_jira_issue () {
+  local open_cmd
+  if [[ "$OSTYPE" = darwin* ]]; then
+    open_cmd='open'
+  else
+    open_cmd='xdg-open'
+  fi
+
+  local jira_url
   if [ -f .jira-url ]; then
     jira_url=$(cat .jira-url)
   elif [ -f ~/.jira-url ]; then
@@ -23,6 +31,7 @@ open_jira_issue () {
     return 1
   fi
 
+  local jira_prefix
   if [ -f .jira-prefix ]; then
     jira_prefix=$(cat .jira-prefix)
   elif [ -f ~/.jira-prefix ]; then
@@ -38,7 +47,7 @@ open_jira_issue () {
     open_command "${jira_url}/secure/CreateIssue!default.jspa"
   elif [[ "$1" = "assigned" || "$1" = "reported" ]]; then
     jira_query $@
-  else 
+  else
     local addcomment=''
     if [[ "$2" == "m" ]]; then
       addcomment="#add-comment"
@@ -46,11 +55,11 @@ open_jira_issue () {
     else
       echo "Opening issue #$1"
     fi
-    
-    if [[ "x$JIRA_RAPID_BOARD" = "xtrue" ]]; then
-      open_command  "$jira_url/issues/$jira_prefix$1$addcomment"
+
+    if [[ "$JIRA_RAPID_BOARD" == "true" ]]; then
+      $open_cmd "$jira_url/issues/$jira_prefix$1$addcomment"
     else
-      open_command  "$jira_url/browse/$jira_prefix$1$addcomment"
+      $open_cmd "$jira_url/browse/$jira_prefix$1$addcomment"
     fi
   fi
 }
@@ -69,24 +78,28 @@ jira_name () {
 }
 
 jira_query () {
-    verb="$1"
-    if [[ "${verb}" = "reported" ]]; then
-      lookup=reporter
-      preposition=by
-    elif [[ "${verb}" = "assigned" ]]; then
-      lookup=assignee
-      preposition=to
-    else
-      echo "not a valid lookup $verb"
-      return 1
-    fi
-    shift 1
-    jira_name $@
-    if [[ $? = 1 ]]; then
-        return 1
-    fi
-    echo "Browsing issues ${verb} ${preposition} ${jira_name}"
-    open_command "${jira_url}/secure/IssueNavigator.jspa?reset=true&jqlQuery=${lookup}+%3D+%22${jira_name}%22+AND+resolution+%3D+unresolved+ORDER+BY+priority+DESC%2C+created+ASC"
+  local jira_name
+  local verb
+  verb="$1"
+  local lookup
+  local preposition
+  if [[ "${verb}" = "reported" ]]; then
+    lookup=reporter
+    preposition=by
+  elif [[ "${verb}" = "assigned" ]]; then
+    lookup=assignee
+    preposition=to
+  else
+    echo "not a valid lookup $verb"
+    return 1
+  fi
+  shift 1
+  jira_name $@
+  if [[ $? = 1 ]]; then
+    return 1
+  fi
+  echo "Browsing issues ${verb} ${preposition} ${jira_name}"
+  $open_cmd "${jira_url}/secure/IssueNavigator.jspa?reset=true&jqlQuery=${lookup}+%3D+%22${jira_name}%22+AND+resolution+%3D+unresolved+ORDER+BY+priority+DESC%2C+created+ASC"
 }
 
 alias jira='open_jira_issue'
