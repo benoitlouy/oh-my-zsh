@@ -86,11 +86,8 @@ jira_name () {
   fi
 
 jira_query () {
-  local jira_name
-  local verb
-  verb="$1"
-  local lookup
-  local preposition
+  local verb="$1"
+  local jira_name lookup preposition
   if [[ "${verb}" = "reported" ]]; then
     lookup=reporter
     preposition=by
