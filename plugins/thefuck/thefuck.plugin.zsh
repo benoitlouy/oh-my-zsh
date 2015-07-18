@@ -1,14 +1,6 @@
-if [[ -z $commands[thefuck] ]]; then
-    echo 'thefuck is not installed, you should "pip install thefuck" first'
-    return -1
-fi
-
-# Register alias
-eval "$(thefuck --alias)"
-
 fuck-command-line() {
-    local FUCK="$(THEFUCK_REQUIRE_CONFIRMATION=0 thefuck $(fc -ln -1 | tail -n 1) 2> /dev/null)"
-    [[ -z $FUCK ]] && echo -n -e "\a" && return
+    FUCK=$(thefuck $(fc -ln -1 | tail -n 1) 2> /dev/null)
+    [ -z $FUCK ] && echo -n -e "\a" && return
     BUFFER=$FUCK
     zle end-of-line
 }
