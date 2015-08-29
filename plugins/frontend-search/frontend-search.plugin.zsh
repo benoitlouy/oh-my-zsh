@@ -23,7 +23,7 @@ alias unheap='frontend unheap'
 function frontend() {
   emulate -L zsh
 
-  # define search context URLS
+  # define search content URLS
   typeset -A urls
   urls=(
     angularjs      'https://google.com/search?as_sitesearch=angularjs.org&as_q='
@@ -49,25 +49,14 @@ function frontend() {
     unheap         'http://www.unheap.com/?s='
   )
 
-  # show help for command list
-  if [[ $# -lt 2 ]]
-  then
-      print -P "Usage: frontend %Ucontext%u %Uterm%u [...%Umore%u] (or just: %Ucontext%u %Uterm%u [...%Umore%u])"
-      print -P ""
-      print -P "%Uterm%u and what follows is what will be searched for in the %Ucontext%u website,"
-      print -P "and %Ucontext%u is one of the following:"
-      print -P ""
-      print -P "  angularjs, aurajs, bem, bootsnipp, caniuse, codepen, compass, cssflow,"
-      print -P "  dartlang, emberjs, fontello, html5please, jquery, lodash, mdn, npmjs,"
-      print -P "  qunit, reactjs, smacss, stackoverflow, unheap"
-      print -P ""
-      print -P "For example: frontend npmjs mocha (or just: npmjs mocha)."
-      print -P ""
-      return 1
+  # no keyword provided, simply show how call methods
+  if [[ $# -le 1 ]]; then
+    echo "Please provide a search-content and a search-term for app.\nEx:\nfrontend <search-content> <search-term>\n"
+    return 1
   fi
 
   # check whether the search engine is supported
-  if [[ ! $1 =~ '(jquery|mdn|compass|html5please|caniuse|aurajs|dartlang|qunit|fontello|bootsnipp|cssflow|codepen|unheap|bem|smacss|angularjs|reactjs|emberjs|stackoverflow|npmjs)' ]];
+  if [[ -z "$urls[$1]" ]]; then
   then
     echo "Search valid search content $1 not supported."
     echo "Valid contents: (formats 'frontend <search-content>' or '<search-content>')"
@@ -97,74 +86,9 @@ function frontend() {
   fi
 
   # build search url:
-  # join arguments passed with '+', then append to search context URL
+  # join arguments passed with '+', then append to search engine URL
   # TODO substitute for proper urlencode method
   url="${urls[$1]}${(j:+:)@[2,-1]}"
-
-  case "$1" in
-    "jquery")
-      url="${url}api.jquery.com"
-      url="${url}/?s=$2" ;;
-    "mdn")
-      url="${url}developer.mozilla.org"
-      url="${url}/search?q=$2" ;;
-    "compass")
-      url="${url}compass-style.org"
-      url="${url}/search?q=$2" ;;
-    "html5please")
-      url="${url}html5please.com"
-      url="${url}/#$2" ;;
-    "caniuse")
-      url="${url}caniuse.com"
-      url="${url}/#search=$2" ;;
-    "aurajs")
-      url="${url}aurajs.com"
-      url="${url}/api/#stq=$2" ;;
-    "dartlang")
-      url="${url}api.dartlang.org/apidocs/channels/stable/dartdoc-viewer"
-      url="${url}/dart-$2" ;;
-    "qunit")
-      url="${url}api.qunitjs.com"
-      url="${url}/?s=$2" ;;
-    "fontello")
-      url="${url}fontello.com"
-      url="${url}/#search=$2" ;;
-    "bootsnipp")
-      url="${url}bootsnipp.com"
-      url="${url}/search?q=$2" ;;
-    "cssflow")
-      url="${url}cssflow.com"
-      url="${url}/search?q=$2" ;;
-    "codepen")
-      url="${url}codepen.io"
-      url="${url}/search?q=$2" ;;
-    "unheap")
-      url="${url}www.unheap.com"
-      url="${url}/?s=$2" ;;
-    "bem")
-      url="${url}google.com"
-      url="${url}/search?as_q=$2&as_sitesearch=bem.info" ;;
-    "smacss")
-      url="${url}google.com"
-      url="${url}/search?as_q=$2&as_sitesearch=smacss.com" ;;
-    "angularjs")
-      url="${url}google.com"
-      url="${url}/search?as_q=$2&as_sitesearch=angularjs.org" ;;
-    "reactjs")
-      url="${url}google.com"
-      url="${url}/search?as_q=$2&as_sitesearch=facebook.github.io/react" ;;
-    "emberjs")
-      url="${url}emberjs.com"
-      url="${url}/api/#stq=$2&stp=1" ;;
-    "stackoverflow")
-      url="${url}stackoverflow.com"
-      url="${url}/search?q=$2" ;;
-    "npmjs")
-      url="${url}www.npmjs.com"
-      url="${url}/search?q=$2" ;;
-    *) echo "INVALID PARAM!"
-       return ;;
-  esac
 
   echo "$url"
 
